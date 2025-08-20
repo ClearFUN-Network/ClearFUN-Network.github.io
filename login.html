@@ -3,17 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Giriş / Kayıt Ol</title>
+<title>Login / Register</title>
 <style>
-  body { font-family: Arial, sans-serif; text-align: center; background: #f4f4f4; }
-  .container { max-width: 400px; margin: 50px auto; padding: 20px; background: #fff; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+  body { font-family: Arial, sans-serif; text-align: center; background: #000; color: #FFD700; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
+  .container { max-width: 400px; margin-top: 50px; padding: 20px; background: #111; border-radius: 10px; box-shadow: 0 0 10px #FFD700; }
   input { width: 90%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc; }
-  button { width: 95%; padding: 10px; margin: 10px 0; background: #4CAF50; border: none; color: white; font-size: 16px; border-radius: 5px; cursor: pointer; }
-  button:hover { background: #45a049; }
-  #logoutBtn { background: #f44336; }
-  .yetkili-btn { background: #FFD700; color: #000; }
-  .yetkili-btn:hover { background: #e6c200; }
-  p { color: red; }
+  button { width: 95%; padding: 10px; margin: 10px 0; background: #FFD700; border: none; color: #000; font-weight: bold; border-radius: 5px; cursor: pointer; }
+  button:hover { background: #e6c200; }
+  #logoutBtn { background: #f44336; color: white; }
+  p { margin-top: 10px; }
 </style>
 </head>
 <body>
@@ -24,76 +22,89 @@
   <button onclick="register()">Kayıt Ol</button>
   <button onclick="login()">Giriş Yap</button>
   <button id="logoutBtn" style="display:none;" onclick="logout()">Çıkış Yap</button>
-  <button id="yetkiliBtn" class="yetkili-btn">Yetkili Başvuru Formu</button>
   <p id="status"></p>
 </div>
 
 <script>
-  // Kullanıcı kayıt (localStorage kullanılıyor)
-  function register() {
-    const username = document.getElementById("username").value.trim();
-    const password = document.getElementById("password").value;
+// Kullanıcı kayıt kontrolü ve spam kontrol (1 hafta içinde 2 kayıt)
+function canRegister() {
+  const now = Date.now();
+  const data = JSON.parse(localStorage.getItem("registrationData") || "{}");
+  const oneWeek = 7 * 24 * 60 * 60 * 1000;
 
-    if (!username) { document.getElementById("status").innerText = "Minecraft kullanıcı adını gir!"; return; }
-    if (password.length < 6) { document.getElementById("status").innerText = "Şifre en az 6 karakter olmalı!"; return; }
-
-    let users = JSON.parse(localStorage.getItem("users") || "{}");
-
-    if (users[username]) {
-      document.getElementById("status").innerText = "Bu kullanıcı adı zaten kayıtlı!";
-      return;
+  if (data.timestamp && (now - data.timestamp < oneWeek)) {
+    if (data.count >= 2) {
+      return false; // 1 hafta içinde 2 kayıt limiti
+    } else {
+      data.count += 1;
     }
+  } else {
+    data.timestamp = now;
+    data.count = 1;
+  }
 
-    users[username] = { password: password };
-    localStorage.setItem("users", JSON.stringify(users));
+  localStorage.setItem("registrationData", JSON.stringify(data));
+  return true;
+}
+
+// Kayıt fonksiyonu
+function register() {
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value;
+
+  if (!username || password.length < 6) {
+    document.getElementById("status").innerText = "Kullanıcı adı girin ve şifre en az 6 karakter olmalı!";
+    return;
+  }
+
+  if (!canRegister()) {
+    document.getElementById("status").innerText = "Bu tarayıcıdan 1 hafta içinde en fazla 2 hesap açabilirsiniz!";
+    return;
+  }
+
+  const users = JSON.parse(localStorage.getItem("users") || "{}");
+  if (users[username]) {
+    document.getElementById("status").innerText = "Bu kullanıcı adı zaten alınmış!";
+    return;
+  }
+
+  users[username] = { password: password };
+  localStorage.setItem("users", JSON.stringify(users));
+  localStorage.setItem("loggedInUser", username);
+  document.getElementById("status").innerText = "Kayıt başarılı! Giriş yapıldı: " + username;
+  document.getElementById("logoutBtn").style.display = "block";
+}
+
+// Giriş fonksiyonu
+function login() {
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value;
+
+  const users = JSON.parse(localStorage.getItem("users") || "{}");
+  if (users[username] && users[username].password === password) {
     localStorage.setItem("loggedInUser", username);
-    document.getElementById("status").innerText = "Kayıt başarılı! Hoş geldin " + username;
+    document.getElementById("status").innerText = "Giriş başarılı! Hoş geldin: " + username;
+    document.getElementById("logoutBtn").style.display = "block";
+  } else {
+    document.getElementById("status").innerText = "Kullanıcı adı veya şifre hatalı!";
+  }
+}
+
+// Çıkış fonksiyonu
+function logout() {
+  localStorage.removeItem("loggedInUser");
+  document.getElementById("status").innerText = "Çıkış yapıldı.";
+  document.getElementById("logoutBtn").style.display = "none";
+}
+
+// Sayfa yüklendiğinde login kontrolü
+window.onload = function() {
+  const savedUser = localStorage.getItem("loggedInUser");
+  if (savedUser) {
+    document.getElementById("status").innerText = "Zaten giriş yaptın: " + savedUser;
     document.getElementById("logoutBtn").style.display = "block";
   }
-
-  // Giriş yap
-  function login() {
-    const username = document.getElementById("username").value.trim();
-    const password = document.getElementById("password").value;
-
-    let users = JSON.parse(localStorage.getItem("users") || "{}");
-
-    if (!users[username] || users[username].password !== password) {
-      document.getElementById("status").innerText = "Hatalı kullanıcı adı veya şifre!";
-      return;
-    }
-
-    localStorage.setItem("loggedInUser", username);
-    document.getElementById("status").innerText = "Giriş başarılı! Hoş geldin " + username;
-    document.getElementById("logoutBtn").style.display = "block";
-  }
-
-  // Çıkış yap
-  function logout() {
-    localStorage.removeItem("loggedInUser");
-    document.getElementById("status").innerText = "Çıkış yapıldı.";
-    document.getElementById("logoutBtn").style.display = "none";
-  }
-
-  // Yetkili başvuru butonu
-  const yetkiliBtn = document.getElementById("yetkiliBtn");
-  yetkiliBtn.addEventListener("click", function() {
-    const savedUser = localStorage.getItem("loggedInUser");
-    if (!savedUser) {
-      alert("Yetkili başvuru formuna erişmek için önce giriş yapmalısınız!");
-      return;
-    }
-    window.location.href = "yetkili.html";
-  });
-
-  // Sayfa açıldığında kontrol
-  window.onload = function() {
-    const savedUser = localStorage.getItem("loggedInUser");
-    if (savedUser) {
-      document.getElementById("status").innerText = "Zaten giriş yaptın: " + savedUser;
-      document.getElementById("logoutBtn").style.display = "block";
-    }
-  }
+}
 </script>
 </body>
 </html>
