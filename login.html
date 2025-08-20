@@ -4,8 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Giriş / Kayıt Ol</title>
-<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js"></script>
 <style>
   body { font-family: Arial, sans-serif; text-align: center; background: #f4f4f4; }
   .container { max-width: 400px; margin: 50px auto; padding: 20px; background: #fff; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
@@ -31,21 +29,7 @@
 </div>
 
 <script>
-  // Firebase yapılandırması
-  const firebaseConfig = {
-    apiKey: "AIzaSyBxjqeiGhz2stD7VLJFAvehqwK6QUSMCVM",
-    authDomain: "clearfun-d2062.firebaseapp.com",
-    projectId: "clearfun-d2062",
-    storageBucket: "clearfun-d2062.appspot.com",
-    messagingSenderId: "887811823368",
-    appId: "1:887811823368:web:ad7cb6c62f138fede9bebd"
-  };
-
-  // Firebase başlat
-  const app = firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-
-  // Kullanıcı kayıt (e-posta yerine username kullanılıyor)
+  // Kullanıcı kayıt (localStorage kullanılıyor)
   function register() {
     const username = document.getElementById("username").value.trim();
     const password = document.getElementById("password").value;
@@ -53,46 +37,42 @@
     if (!username) { document.getElementById("status").innerText = "Minecraft kullanıcı adını gir!"; return; }
     if (password.length < 6) { document.getElementById("status").innerText = "Şifre en az 6 karakter olmalı!"; return; }
 
-    const email = username + "@clearfun.local"; // e-posta zorunlu olduğu için dummy e-posta kullanıyoruz
+    let users = JSON.parse(localStorage.getItem("users") || "{}");
 
-    auth.createUserWithEmailAndPassword(email, password)
-      .then(userCredential => {
-        const user = userCredential.user;
-        user.updateProfile({ displayName: username });
-        document.getElementById("status").innerText = "Kayıt başarılı!";
-        localStorage.setItem("loggedInUser", username);
-        document.getElementById("logoutBtn").style.display = "block";
-      })
-      .catch(error => {
-        document.getElementById("status").innerText = "Hata: " + error.message;
-      });
+    if (users[username]) {
+      document.getElementById("status").innerText = "Bu kullanıcı adı zaten kayıtlı!";
+      return;
+    }
+
+    users[username] = { password: password };
+    localStorage.setItem("users", JSON.stringify(users));
+    localStorage.setItem("loggedInUser", username);
+    document.getElementById("status").innerText = "Kayıt başarılı! Hoş geldin " + username;
+    document.getElementById("logoutBtn").style.display = "block";
   }
 
-  // Giriş yap (e-posta yerine dummy e-posta kullanılıyor)
+  // Giriş yap
   function login() {
     const username = document.getElementById("username").value.trim();
     const password = document.getElementById("password").value;
-    const email = username + "@clearfun.local";
 
-    auth.signInWithEmailAndPassword(email, password)
-      .then(userCredential => {
-        const user = userCredential.user;
-        document.getElementById("status").innerText = "Giriş başarılı! Hoş geldin " + (user.displayName || "");
-        localStorage.setItem("loggedInUser", user.displayName);
-        document.getElementById("logoutBtn").style.display = "block";
-      })
-      .catch(error => {
-        document.getElementById("status").innerText = "Hata: " + error.message;
-      });
+    let users = JSON.parse(localStorage.getItem("users") || "{}");
+
+    if (!users[username] || users[username].password !== password) {
+      document.getElementById("status").innerText = "Hatalı kullanıcı adı veya şifre!";
+      return;
+    }
+
+    localStorage.setItem("loggedInUser", username);
+    document.getElementById("status").innerText = "Giriş başarılı! Hoş geldin " + username;
+    document.getElementById("logoutBtn").style.display = "block";
   }
 
   // Çıkış yap
   function logout() {
-    auth.signOut().then(() => {
-      localStorage.removeItem("loggedInUser");
-      document.getElementById("status").innerText = "Çıkış yapıldı.";
-      document.getElementById("logoutBtn").style.display = "none";
-    });
+    localStorage.removeItem("loggedInUser");
+    document.getElementById("status").innerText = "Çıkış yapıldı.";
+    document.getElementById("logoutBtn").style.display = "none";
   }
 
   // Yetkili başvuru butonu
