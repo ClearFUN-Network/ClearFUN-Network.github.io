@@ -36,7 +36,6 @@ const status = document.getElementById("status");
 // Discord Webhook URL
 const webhookURL = "https://discord.com/api/webhooks/1407821463406514327/iOVfGLZ6XGZ5ghKYe39CMAP7f6sez4xaa4MaISrWvi-ebZSaLyk8WwwQD6lq6zrjknHq";
 
-// Form gönderme
 form.addEventListener("submit", function(e) {
   e.preventDefault();
 
@@ -54,12 +53,24 @@ form.addEventListener("submit", function(e) {
   const spam = document.getElementById("spam").value.trim();
   const ekstra = document.getElementById("ekstra").value.trim() || "Yok";
 
-  const content = `**Kullanıcı:** ${username}\n**1. Adınız:** ${adiniz}\n**2. Yaşınız:** ${yasiniz}\n**3. Discord İsminiz:** ${discordIsminiz}\n**4. Kendinizi diğerlerinden öne çıkaran şey:** ${ozelOzellik}\n**5. Küfür durumunda ne yaparsınız:** ${kufur}\n**6. Spam/Flood durumunda ne yaparsınız:** ${spam}\n**7. Ekstra:** ${ekstra}`;
+  const embed = {
+    title: `Yetkili Başvuru - ${username}`,
+    color: 0xFFD700, // Altın rengi
+    fields: [
+      { name: "1. Adınız", value: adiniz },
+      { name: "2. Yaşınız", value: yasiniz },
+      { name: "3. Discord İsminiz", value: discordIsminiz },
+      { name: "4. Kendinizi öne çıkaran şey", value: ozelOzellik },
+      { name: "5. Küfür durumunda ne yaparsınız?", value: kufur },
+      { name: "6. Spam/Flood durumunda ne yaparsınız?", value: spam },
+      { name: "7. Ekstra", value: ekstra }
+    ]
+  };
 
   fetch(webhookURL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ content: content })
+    body: JSON.stringify({ embeds: [embed] })
   })
   .then(response => {
     if (response.ok) {
