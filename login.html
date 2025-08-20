@@ -1,104 +1,117 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Giriş / Kayıt Ol</title>
-  <!-- Firebase v11 (modular) -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Giriş / Kayıt Ol</title>
+<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js"></script>
+<style>
+  body { font-family: Arial, sans-serif; text-align: center; background: #f4f4f4; }
+  .container { max-width: 400px; margin: 50px auto; padding: 20px; background: #fff; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+  input { width: 90%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc; }
+  button { width: 95%; padding: 10px; margin: 10px 0; background: #4CAF50; border: none; color: white; font-size: 16px; border-radius: 5px; cursor: pointer; }
+  button:hover { background: #45a049; }
+  #logoutBtn { background: #f44336; }
+  .yetkili-btn { background: #FFD700; color: #000; }
+  .yetkili-btn:hover { background: #e6c200; }
+  p { color: red; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h2>Giriş Yap / Kayıt Ol</h2>
+  <input type="text" id="username" placeholder="Minecraft Kullanıcı Adı">
+  <input type="email" id="email" placeholder="E-posta">
+  <input type="password" id="password" placeholder="Şifre (min 6 karakter)">
+  <button onclick="register()">Kayıt Ol</button>
+  <button onclick="login()">Giriş Yap</button>
+  <button id="logoutBtn" style="display:none;" onclick="logout()">Çıkış Yap</button>
+  <button id="yetkiliBtn" class="yetkili-btn">Yetkili Başvuru Formu</button>
+  <p id="status"></p>
+</div>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBxjqeiGhz2stD7VLJFAvehqwK6QUSMCVM",
-      authDomain: "clearfun-d2062.firebaseapp.com",
-      projectId: "clearfun-d2062",
-      storageBucket: "clearfun-d2062.firebasestorage.app",
-      messagingSenderId: "887811823368",
-      appId: "1:887811823368:web:ad7cb6c62f138fede9bebd",
-      measurementId: "G-87MWBTGV67"
-    };
+<script>
+  // Firebase yapılandırması
+  const firebaseConfig = {
+    apiKey: "AIzaSyBxjqeiGhz2stD7VLJFAvehqwK6QUSMCVM",
+    authDomain: "clearfun-d2062.firebaseapp.com",
+    projectId: "clearfun-d2062",
+    storageBucket: "clearfun-d2062.appspot.com",
+    messagingSenderId: "887811823368",
+    appId: "1:887811823368:web:ad7cb6c62f138fede9bebd"
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+  // Firebase başlat
+  const app = firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
 
-    window.register = async function() {
-      const username = document.getElementById("username").value.trim();
-      const password = document.getElementById("password").value;
-      const status = document.getElementById("status");
+  // Kullanıcı kayıt
+  function register() {
+    const username = document.getElementById("username").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
 
-      if (!username || !password) { 
-        status.innerText = "Lütfen hem Minecraft kullanıcı adını hem de şifreyi girin!";
-        return; 
-      }
+    if (!username) { document.getElementById("status").innerText = "Minecraft kullanıcı adını gir!"; return; }
 
-      try {
-        // Email yerine username@dummy.com kullanıyoruz
-        const dummyEmail = username + "@dummy.com";
-        const userCredential = await createUserWithEmailAndPassword(auth, dummyEmail, password);
+    auth.createUserWithEmailAndPassword(email, password)
+      .then(userCredential => {
         const user = userCredential.user;
-        await updateProfile(user, { displayName: username });
-        status.innerText = "Kayıt başarılı! Giriş yapabilirsiniz.";
-      } catch (error) {
-        status.innerText = "Hata: " + error.message;
-      }
-    }
-
-    window.login = async function() {
-      const username = document.getElementById("username").value.trim();
-      const password = document.getElementById("password").value;
-      const status = document.getElementById("status");
-
-      if (!username || !password) { 
-        status.innerText = "Lütfen hem Minecraft kullanıcı adını hem de şifreyi girin!";
-        return; 
-      }
-
-      try {
-        const dummyEmail = username + "@dummy.com";
-        const userCredential = await signInWithEmailAndPassword(auth, dummyEmail, password);
-        const user = userCredential.user;
-        status.innerText = "Giriş başarılı! Hoş geldin " + (user.displayName || "");
+        user.updateProfile({ displayName: username });
+        document.getElementById("status").innerText = "Kayıt başarılı!";
         localStorage.setItem("loggedInUser", username);
         document.getElementById("logoutBtn").style.display = "block";
-      } catch (error) {
-        status.innerText = "Hata: " + error.message;
-      }
-    }
+      })
+      .catch(error => {
+        document.getElementById("status").innerText = "Hata: " + error.message;
+      });
+  }
 
-    window.logout = async function() {
-      await signOut(auth);
+  // Giriş yap
+  function login() {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+
+    auth.signInWithEmailAndPassword(email, password)
+      .then(userCredential => {
+        const user = userCredential.user;
+        document.getElementById("status").innerText = "Giriş başarılı! Hoş geldin " + (user.displayName || "");
+        localStorage.setItem("loggedInUser", user.displayName);
+        document.getElementById("logoutBtn").style.display = "block";
+      })
+      .catch(error => {
+        document.getElementById("status").innerText = "Hata: " + error.message;
+      });
+  }
+
+  // Çıkış yap
+  function logout() {
+    auth.signOut().then(() => {
       localStorage.removeItem("loggedInUser");
       document.getElementById("status").innerText = "Çıkış yapıldı.";
       document.getElementById("logoutBtn").style.display = "none";
-    }
+    });
+  }
 
-    window.onload = function() {
-      const savedUser = localStorage.getItem("loggedInUser");
-      if (savedUser) {
-        document.getElementById("status").innerText = "Zaten giriş yaptın: " + savedUser;
-        document.getElementById("logoutBtn").style.display = "block";
-      }
+  // Yetkili başvuru butonu
+  const yetkiliBtn = document.getElementById("yetkiliBtn");
+  yetkiliBtn.addEventListener("click", function() {
+    const savedUser = localStorage.getItem("loggedInUser");
+    if (!savedUser) {
+      alert("Yetkili başvuru formuna erişmek için önce giriş yapmalısınız!");
+      return;
     }
-  </script>
-  <style>
-    body { font-family: Arial, sans-serif; text-align: center; background: #f4f4f4; }
-    .container { max-width: 400px; margin: 50px auto; padding: 20px; background: #fff; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
-    input { width: 90%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc; }
-    button { width: 95%; padding: 10px; margin: 10px 0; background: #4CAF50; border: none; color: white; font-size: 16px; border-radius: 5px; cursor: pointer; }
-    button:hover { background: #45a049; }
-    #logoutBtn { background: #f44336; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h2>Giriş Yap / Kayıt Ol</h2>
-    <input type="text" id="username" placeholder="Minecraft Kullanıcı Adı">
-    <input type="password" id="password" placeholder="Şifre (min 6 karakter)">
-    <button onclick="register()">Kayıt Ol</button>
-    <button onclick="login()">Giriş Yap</button>
-    <button id="logoutBtn" style="display:none;" onclick="logout()">Çıkış Yap</button>
-    <p id="status"></p>
-  </div>
+    window.location.href = "yetkili.html";
+  });
+
+  // Sayfa açıldığında kontrol
+  window.onload = function() {
+    const savedUser = localStorage.getItem("loggedInUser");
+    if (savedUser) {
+      document.getElementById("status").innerText = "Zaten giriş yaptın: " + savedUser;
+      document.getElementById("logoutBtn").style.display = "block";
+    }
+  }
+</script>
 </body>
 </html>
