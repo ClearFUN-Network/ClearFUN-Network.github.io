@@ -23,7 +23,7 @@
     <textarea id="ozelOzellik" placeholder="4. Kendinizi diğerlerinden öne çıkaran şeyiniz ne?" required></textarea>
     <textarea id="kufur" placeholder="5. Sunucuda biri küfür ediyor ise ne yaparsınız?" required></textarea>
     <textarea id="spam" placeholder="6. Sunucuda biri spam/flood yapıyorsa ne yaparsınız?" required></textarea>
-    <textarea id="ekstra" placeholder="7. Eklemek/söylemek istediğiniz ekstra bir şey var mı?"></textarea>
+    <textarea id="ekstra" placeholder="7. Ekstra (varsa)"></textarea>
     <button type="submit">Formu Gönder</button>
   </form>
   <p id="status"></p>
@@ -32,9 +32,29 @@
 <script>
 const form = document.getElementById("yetkiliForm");
 const status = document.getElementById("status");
-
-// Discord Webhook URL
 const webhookURL = "https://discord.com/api/webhooks/1407821463406514327/iOVfGLZ6XGZ5ghKYe39CMAP7f6sez4xaa4MaISrWvi-ebZSaLyk8WwwQD6lq6zrjknHq";
+
+// Başvuru spam kontrolü: aynı kullanıcı, 1 hafta içinde en fazla 2 başvuru
+function canSubmitForm(username) {
+  const now = Date.now();
+  const data = JSON.parse(localStorage.getItem("formSubmissions") || "{}");
+  const oneWeek = 7 * 24 * 60 * 60 * 1000;
+
+  if (!data[username]) data[username] = { timestamps: [] };
+
+  // 1 haftadan eski kayıtları temizle
+  data[username].timestamps = data[username].timestamps.filter(ts => now - ts < oneWeek);
+
+  if (data[username].timestamps.length >= 2) {
+    localStorage.setItem("formSubmissions", JSON.stringify(data));
+    return false; // 1 hafta içinde 2 başvuru doldu
+  }
+
+  // Yeni başvuru ekle
+  data[username].timestamps.push(now);
+  localStorage.setItem("formSubmissions", JSON.stringify(data));
+  return true;
+}
 
 form.addEventListener("submit", function(e) {
   e.preventDefault();
@@ -42,6 +62,12 @@ form.addEventListener("submit", function(e) {
   const username = localStorage.getItem("loggedInUser");
   if (!username) {
     alert("Formu göndermek için önce giriş yapmalısınız!");
+    return;
+  }
+
+  if (!canSubmitForm(username)) {
+    status.style.color = "red";
+    status.innerText = "Bu kullanıcı 1 hafta içinde en fazla 2 başvuru gönderebilir!";
     return;
   }
 
@@ -55,7 +81,7 @@ form.addEventListener("submit", function(e) {
 
   const embed = {
     title: `Yetkili Başvuru - ${username}`,
-    color: 0xFFD700, // Altın rengi
+    color: 0xFFD700,
     fields: [
       { name: "1. Adınız", value: adiniz },
       { name: "2. Yaşınız", value: yasiniz },
