@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yetkili Başvuru Formu</title>
+<style>
+  body { font-family: Arial, sans-serif; text-align: center; background: #f4f4f4; }
+  .container { max-width: 600px; margin: 50px auto; padding: 20px; background: #fff; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+  input, textarea { width: 90%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc; }
+  button { width: 95%; padding: 10px; margin: 10px 0; background: #4CAF50; border: none; color: white; font-size: 16px; border-radius: 5px; cursor: pointer; }
+  button:hover { background: #45a049; }
+  p { color: red; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h2>Yetkili Başvuru Formu</h2>
+  <p id="status"></p>
+  <form id="applicationForm" style="display:none;">
+    <input type="text" id="name" placeholder="1. Adınız" required>
+    <input type="number" id="age" placeholder="2. Yaşınız" required>
+    <input type="text" id="discord" placeholder="3. Discord isminiz" required>
+    <textarea id="unique" placeholder="4. Kendinizi diğerlerinden öne çıkaran şeyiniz ne?" rows="3" required></textarea>
+    <textarea id="curse" placeholder="5. Sunucuda birisi küfür ediyorsa ne yaparsınız?" rows="3" required></textarea>
+    <textarea id="spam" placeholder="6. Sunucuda birisi spam veya flood yapıyorsa ne yaparsınız?" rows="3" required></textarea>
+    <textarea id="extra" placeholder="7. Eklemek veya söylemek istediğiniz ekstra bir şey var mı?" rows="3"></textarea>
+    <button type="submit">Gönder</button>
+  </form>
+</div>
+
+<script>
+const savedUser = localStorage.getItem("loggedInUser");
+const status = document.getElementById("status");
+const form = document.getElementById("applicationForm");
+
+if (!savedUser) {
+  status.innerText = "Bu formu doldurmak için üye olmanız gerekiyor!";
+} else {
+  status.innerText = "Hoş geldin, " + savedUser;
+  form.style.display = "block";
+}
+
+form.addEventListener("submit", function(e) {
+  e.preventDefault();
+  if (!savedUser) {
+    status.innerText = "Önce giriş yapmalısınız!";
+    return;
+  }
+
+  const name = document.getElementById("name").value.trim();
+  const age = document.getElementById("age").value.trim();
+  const discordName = document.getElementById("discord").value.trim();
+  const unique = document.getElementById("unique").value.trim();
+  const curse = document.getElementById("curse").value.trim();
+  const spam = document.getElementById("spam").value.trim();
+  const extra = document.getElementById("extra").value.trim();
+
+  if (!name || !age || !discordName || !unique || !curse || !spam) {
+    status.innerText = "Lütfen tüm zorunlu alanları doldurun!";
+    return;
+  }
+
+  const webhookURL = "https://discord.com/api/webhooks/1407821463406514327/iOVfGLZ6XGZ5ghKYe39CMAP7f6sez4xaa4MaISrWvi-ebZSaLyk8WwwQD6lq6zrjknHq";
+
+  // Embed format
+  const embedData = {
+    username: savedUser,
+    embeds: [{
+      title: "Yeni Yetkili Başvurusu",
+      color: 0xFFD700,
+      fields: [
+        { name: "
