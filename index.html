@@ -35,6 +35,14 @@
       width: 24px;
       height: 24px;
     }
+    #yetkiliBtn {
+      display: none;
+      background-color: #00bfff;
+      color: #fff;
+    }
+    #yetkiliBtn:hover {
+      background-color: #009fd4;
+    }
   </style>
 </head>
 <body>
@@ -44,6 +52,7 @@
       <a href="gizlilik.html" class="btn">Gizlilik Politikası</a>
       <a href="hakkimizda.html" class="btn">Hakkımızda</a>
       <a href="login.html" class="btn">Login/Register</a>
+      <button id="yetkiliBtn" class="btn" onclick="goYetkili()">Yetkili Başvuru</button>
     </nav>
   </header>
 
@@ -59,5 +68,19 @@
   <footer style="margin-top:auto; padding:10px; background:#111; width:100%; text-align:center; font-size:12px; color:#555;">
     © 2025 ClearFUN
   </footer>
+
+  <script>
+    // Yetkili başvuru butonunu giriş yapan kullanıcı için göster
+    window.onload = function() {
+      const loggedUser = localStorage.getItem("loggedInUser");
+      if(loggedUser) {
+        document.getElementById("yetkiliBtn").style.display = "inline-block";
+      }
+    }
+
+    function goYetkili() {
+      window.location.href = "yetkili.html";
+    }
+  </script>
 </body>
 </html>
