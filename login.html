@@ -6,11 +6,9 @@
   <title>Giriş / Kayıt Ol</title>
   <!-- Firebase v11 (modular) -->
   <script type="module">
-    // Firebase SDK import
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendEmailVerification, updateProfile } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
-    // Firebase yapılandırması
     const firebaseConfig = {
       apiKey: "AIzaSyBxjqeiGhz2stD7VLJFAvehqwK6QUSMCVM",
       authDomain: "clearfun-d2062.firebaseapp.com",
@@ -21,45 +19,48 @@
       measurementId: "G-87MWBTGV67"
     };
 
-    // Firebase başlat
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
-    // Fonksiyonları window nesnesine ekleyelim ki HTML'den çağrılabilsin
     window.register = async function() {
       const username = document.getElementById("username").value.trim();
-      const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
       const status = document.getElementById("status");
 
-      if (!username) { status.innerText = "Minecraft kullanıcı adını gir!"; return; }
+      if (!username || !password) { 
+        status.innerText = "Lütfen hem Minecraft kullanıcı adını hem de şifreyi girin!";
+        return; 
+      }
 
       try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        // Email yerine username@dummy.com kullanıyoruz
+        const dummyEmail = username + "@dummy.com";
+        const userCredential = await createUserWithEmailAndPassword(auth, dummyEmail, password);
         const user = userCredential.user;
         await updateProfile(user, { displayName: username });
-        await sendEmailVerification(user);
-        status.innerText = "Kayıt başarılı! Lütfen e-postanı doğrula.";
+        status.innerText = "Kayıt başarılı! Giriş yapabilirsiniz.";
       } catch (error) {
         status.innerText = "Hata: " + error.message;
       }
     }
 
     window.login = async function() {
-      const email = document.getElementById("email").value.trim();
+      const username = document.getElementById("username").value.trim();
       const password = document.getElementById("password").value;
       const status = document.getElementById("status");
 
+      if (!username || !password) { 
+        status.innerText = "Lütfen hem Minecraft kullanıcı adını hem de şifreyi girin!";
+        return; 
+      }
+
       try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const dummyEmail = username + "@dummy.com";
+        const userCredential = await signInWithEmailAndPassword(auth, dummyEmail, password);
         const user = userCredential.user;
-        if (user.emailVerified) {
-          status.innerText = "Giriş başarılı! Hoş geldin " + (user.displayName || "");
-          localStorage.setItem("loggedInUser", email);
-          document.getElementById("logoutBtn").style.display = "block";
-        } else {
-          status.innerText = "Lütfen e-postanı doğrula!";
-        }
+        status.innerText = "Giriş başarılı! Hoş geldin " + (user.displayName || "");
+        localStorage.setItem("loggedInUser", username);
+        document.getElementById("logoutBtn").style.display = "block";
       } catch (error) {
         status.innerText = "Hata: " + error.message;
       }
@@ -93,7 +94,6 @@
   <div class="container">
     <h2>Giriş Yap / Kayıt Ol</h2>
     <input type="text" id="username" placeholder="Minecraft Kullanıcı Adı">
-    <input type="email" id="email" placeholder="E-posta">
     <input type="password" id="password" placeholder="Şifre (min 6 karakter)">
     <button onclick="register()">Kayıt Ol</button>
     <button onclick="login()">Giriş Yap</button>
