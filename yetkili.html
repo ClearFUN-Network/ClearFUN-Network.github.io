@@ -5,69 +5,78 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Yetkili Başvuru Formu</title>
 <style>
-  body { font-family: Arial, sans-serif; text-align: center; background: #f4f4f4; }
+  body { font-family: Arial, sans-serif; background: #f4f4f4; text-align: center; }
   .container { max-width: 600px; margin: 50px auto; padding: 20px; background: #fff; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
   input, textarea { width: 90%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc; }
-  button { width: 95%; padding: 10px; margin: 10px 0; background: #4CAF50; border: none; color: white; font-size: 16px; border-radius: 5px; cursor: pointer; }
-  button:hover { background: #45a049; }
+  button { width: 95%; padding: 10px; margin: 10px 0; background: #FFD700; border: none; color: #000; font-size: 16px; border-radius: 5px; cursor: pointer; }
+  button:hover { background: #e6c200; }
   p { color: red; }
 </style>
 </head>
 <body>
 <div class="container">
   <h2>Yetkili Başvuru Formu</h2>
-  <p id="status"></p>
-  <form id="applicationForm" style="display:none;">
-    <input type="text" id="name" placeholder="1. Adınız" required>
-    <input type="number" id="age" placeholder="2. Yaşınız" required>
-    <input type="text" id="discord" placeholder="3. Discord isminiz" required>
-    <textarea id="unique" placeholder="4. Kendinizi diğerlerinden öne çıkaran şeyiniz ne?" rows="3" required></textarea>
-    <textarea id="curse" placeholder="5. Sunucuda birisi küfür ediyorsa ne yaparsınız?" rows="3" required></textarea>
-    <textarea id="spam" placeholder="6. Sunucuda birisi spam veya flood yapıyorsa ne yaparsınız?" rows="3" required></textarea>
-    <textarea id="extra" placeholder="7. Eklemek veya söylemek istediğiniz ekstra bir şey var mı?" rows="3"></textarea>
-    <button type="submit">Gönder</button>
+  <form id="yetkiliForm">
+    <input type="text" id="adiniz" placeholder="1. Adınız" required>
+    <input type="text" id="yasiniz" placeholder="2. Yaşınız" required>
+    <input type="text" id="discordIsminiz" placeholder="3. Discord İsminiz" required>
+    <textarea id="ozelOzellik" placeholder="4. Kendinizi diğerlerinden öne çıkaran şeyiniz ne?" required></textarea>
+    <textarea id="kufur" placeholder="5. Sunucuda biri küfür ediyor ise ne yaparsınız?" required></textarea>
+    <textarea id="spam" placeholder="6. Sunucuda biri spam/flood yapıyorsa ne yaparsınız?" required></textarea>
+    <textarea id="ekstra" placeholder="7. Eklemek/söylemek istediğiniz ekstra bir şey var mı?"></textarea>
+    <button type="submit">Formu Gönder</button>
   </form>
+  <p id="status"></p>
 </div>
 
 <script>
-const savedUser = localStorage.getItem("loggedInUser");
+const form = document.getElementById("yetkiliForm");
 const status = document.getElementById("status");
-const form = document.getElementById("applicationForm");
 
-if (!savedUser) {
-  status.innerText = "Bu formu doldurmak için üye olmanız gerekiyor!";
-} else {
-  status.innerText = "Hoş geldin, " + savedUser;
-  form.style.display = "block";
-}
+// Discord Webhook URL
+const webhookURL = "https://discord.com/api/webhooks/1407821463406514327/iOVfGLZ6XGZ5ghKYe39CMAP7f6sez4xaa4MaISrWvi-ebZSaLyk8WwwQD6lq6zrjknHq";
 
+// Form gönderme
 form.addEventListener("submit", function(e) {
   e.preventDefault();
-  if (!savedUser) {
-    status.innerText = "Önce giriş yapmalısınız!";
+
+  const username = localStorage.getItem("loggedInUser");
+  if (!username) {
+    alert("Formu göndermek için önce giriş yapmalısınız!");
     return;
   }
 
-  const name = document.getElementById("name").value.trim();
-  const age = document.getElementById("age").value.trim();
-  const discordName = document.getElementById("discord").value.trim();
-  const unique = document.getElementById("unique").value.trim();
-  const curse = document.getElementById("curse").value.trim();
+  const adiniz = document.getElementById("adiniz").value.trim();
+  const yasiniz = document.getElementById("yasiniz").value.trim();
+  const discordIsminiz = document.getElementById("discordIsminiz").value.trim();
+  const ozelOzellik = document.getElementById("ozelOzellik").value.trim();
+  const kufur = document.getElementById("kufur").value.trim();
   const spam = document.getElementById("spam").value.trim();
-  const extra = document.getElementById("extra").value.trim();
+  const ekstra = document.getElementById("ekstra").value.trim() || "Yok";
 
-  if (!name || !age || !discordName || !unique || !curse || !spam) {
-    status.innerText = "Lütfen tüm zorunlu alanları doldurun!";
-    return;
-  }
+  const content = `**Kullanıcı:** ${username}\n**1. Adınız:** ${adiniz}\n**2. Yaşınız:** ${yasiniz}\n**3. Discord İsminiz:** ${discordIsminiz}\n**4. Kendinizi diğerlerinden öne çıkaran şey:** ${ozelOzellik}\n**5. Küfür durumunda ne yaparsınız:** ${kufur}\n**6. Spam/Flood durumunda ne yaparsınız:** ${spam}\n**7. Ekstra:** ${ekstra}`;
 
-  const webhookURL = "https://discord.com/api/webhooks/1407821463406514327/iOVfGLZ6XGZ5ghKYe39CMAP7f6sez4xaa4MaISrWvi-ebZSaLyk8WwwQD6lq6zrjknHq";
-
-  // Embed format
-  const embedData = {
-    username: savedUser,
-    embeds: [{
-      title: "Yeni Yetkili Başvurusu",
-      color: 0xFFD700,
-      fields: [
-        { name: "
+  fetch(webhookURL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content: content })
+  })
+  .then(response => {
+    if (response.ok) {
+      status.style.color = "green";
+      status.innerText = "Form başarıyla gönderildi!";
+      form.reset();
+    } else {
+      status.style.color = "red";
+      status.innerText = "Form gönderilirken hata oluştu!";
+    }
+  })
+  .catch(err => {
+    status.style.color = "red";
+    status.innerText = "Form gönderilirken hata oluştu!";
+    console.error(err);
+  });
+});
+</script>
+</body>
+</html>
