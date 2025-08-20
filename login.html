@@ -4,8 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Giriş / Kayıt Ol</title>
-  <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js"></script>
+  <!-- Firebase v8 -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <style>
     body { font-family: Arial, sans-serif; text-align: center; background: #f4f4f4; }
     .container { max-width: 400px; margin: 50px auto; padding: 20px; background: #fff;
@@ -35,14 +36,14 @@
       apiKey: "AIzaSyBxjqeiGhz2stD7VLJFAvehqwK6QUSMCVM",
       authDomain: "clearfun-d2062.firebaseapp.com",
       projectId: "clearfun-d2062",
-      storageBucket: "clearfun-d2062.firebasestorage.app",
+      storageBucket: "clearfun-d2062.appspot.com",
       messagingSenderId: "887811823368",
       appId: "1:887811823368:web:7377044f948a128ce9bebd",
       measurementId: "G-HVNEH16JQR"
     };
 
     // Firebase başlat
-    const app = firebase.initializeApp(firebaseConfig);
+    firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
     // Kullanıcı kayıt
@@ -59,9 +60,11 @@
       auth.createUserWithEmailAndPassword(email, password)
         .then(userCredential => {
           const user = userCredential.user;
-          user.updateProfile({ displayName: username }); // Kullanıcı adı kaydedilir
-          document.getElementById("status").innerText = "Kayıt başarılı! E-postanı doğrula.";
-          user.sendEmailVerification(); // Doğrulama e-postası
+          user.updateProfile({ displayName: username })
+            .then(() => {
+              document.getElementById("status").innerText = "Kayıt başarılı! E-postanı doğrula.";
+              user.sendEmailVerification();
+            });
         })
         .catch(error => {
           document.getElementById("status").innerText = "Hata: " + error.message;
